@@ -259,8 +259,8 @@ export default function InternshipDetail() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {internship.responsibilities.map((task, index) => {
-                  const [title, ...descParts] = task.split(' - ');
-                  const description = descParts.join(' - ').trim();
+                  const [title, ...descParts] = task.split('<br>');
+                  const description = descParts.join('<br>').trim();
                   
                   return (
                     <div key={index} className="space-y-2 pb-6 border-b last:border-0">
