@@ -305,7 +305,7 @@ export default function InternshipDetail() {
               </CardHeader>
               <CardContent>
                 <ol className="space-y-3 list-decimal list-inside">
-                  {internship.requirements.slice(0, 4).map((requirement, index) => (
+                  {internship.requirements.map((requirement, index) => (
                     <li key={index}>{requirement}</li>
                   ))}
                 </ol>

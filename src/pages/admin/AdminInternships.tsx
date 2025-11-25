@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit, Users, Eye } from "lucide-react";
+import { Plus, Trash2, Edit, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,11 @@ interface Internship {
   company: string;
   description: string | null;
   duration: string | null;
+  location: string;
+  mode: string;
+  skills: string[];
+  responsibilities: string[];
+  requirements: string[];
   created_at: string | null;
 }
 
@@ -52,7 +57,17 @@ const AdminInternships = () => {
     company: "",
     description: "",
     duration: "",
+    location: "",
+    mode: "",
+    skills: [] as string[],
+    responsibilities: [] as string[],
+    requirements: [] as string[]
   });
+
+  // Temporary state for array inputs
+  const [skillInput, setSkillInput] = useState("");
+  const [responsibilityInput, setResponsibilityInput] = useState("");
+  const [requirementInput, setRequirementInput] = useState("");
 
   useEffect(() => {
     fetchInternships();
@@ -84,7 +99,6 @@ const AdminInternships = () => {
       return;
     }
 
-    // Fetch all profiles for all applications
     const userIds = applications?.map(app => app.user_id) || [];
     let profiles: any[] = [];
     
@@ -101,7 +115,6 @@ const AdminInternships = () => {
       profiles = profilesData || [];
     }
 
-    // Merge data - use application data first, fall back to profile
     const enrichedApplications = applications?.map(app => {
       const profile = profiles?.find(p => p.id === app.user_id);
       return {
@@ -126,7 +139,6 @@ const AdminInternships = () => {
       toast({ title: "Error updating status", variant: "destructive" });
     } else {
       toast({ title: "Status updated successfully" });
-      // Refresh the applicants list using the stored internship ID
       if (currentInternshipId) {
         fetchApplicants(currentInternshipId);
       }
@@ -139,10 +151,8 @@ const AdminInternships = () => {
       return;
     }
 
-    // Prepare CSV headers
     const headers = ['Name', 'Email', 'Phone', 'Course/Branch', 'Year/Semester', 'Status', 'Selected Task', 'Applied Date', 'Resume URL', 'GitHub', 'Portfolio'];
     
-    // Prepare CSV rows
     const rows = selectedInternshipApplicants.map(app => [
       app.full_name || 'N/A',
       app.email || 'N/A',
@@ -157,13 +167,11 @@ const AdminInternships = () => {
       app.portfolio_link || 'N/A',
     ]);
 
-    // Create CSV content
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -178,8 +186,8 @@ const AdminInternships = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.company) {
-      toast({ title: "Title and company are required", variant: "destructive" });
+    if (!formData.title || !formData.company || !formData.location || !formData.mode) {
+      toast({ title: "Title, company, location, and mode are required", variant: "destructive" });
       return;
     }
 
@@ -228,7 +236,20 @@ const AdminInternships = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", company: "", description: "", duration: "" });
+    setFormData({
+      title: "",
+      company: "",
+      description: "",
+      duration: "",
+      location: "",
+      mode: "",
+      skills: [],
+      responsibilities: [],
+      requirements: []
+    });
+    setSkillInput("");
+    setResponsibilityInput("");
+    setRequirementInput("");
     setEditingInternship(null);
     setShowDialog(false);
   };
@@ -240,8 +261,46 @@ const AdminInternships = () => {
       company: internship.company,
       description: internship.description || "",
       duration: internship.duration || "",
+      location: internship.location,
+      mode: internship.mode,
+      skills: internship.skills || [],
+      responsibilities: internship.responsibilities || [],
+      requirements: internship.requirements || []
     });
     setShowDialog(true);
+  };
+
+  const addSkill = () => {
+    if (skillInput.trim()) {
+      setFormData({ ...formData, skills: [...formData.skills, skillInput.trim()] });
+      setSkillInput("");
+    }
+  };
+
+  const removeSkill = (index: number) => {
+    setFormData({ ...formData, skills: formData.skills.filter((_, i) => i !== index) });
+  };
+
+  const addResponsibility = () => {
+    if (responsibilityInput.trim()) {
+      setFormData({ ...formData, responsibilities: [...formData.responsibilities, responsibilityInput.trim()] });
+      setResponsibilityInput("");
+    }
+  };
+
+  const removeResponsibility = (index: number) => {
+    setFormData({ ...formData, responsibilities: formData.responsibilities.filter((_, i) => i !== index) });
+  };
+
+  const addRequirement = () => {
+    if (requirementInput.trim()) {
+      setFormData({ ...formData, requirements: [...formData.requirements, requirementInput.trim()] });
+      setRequirementInput("");
+    }
+  };
+
+  const removeRequirement = (index: number) => {
+    setFormData({ ...formData, requirements: formData.requirements.filter((_, i) => i !== index) });
   };
 
   const getStatusColor = (status: string) => {
@@ -267,14 +326,14 @@ const AdminInternships = () => {
               Add Internship
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingInternship ? 'Edit Internship' : 'Create Internship'}</DialogTitle>
               <DialogDescription>Fill in the internship details</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Title</Label>
+                <Label>Title *</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -282,11 +341,40 @@ const AdminInternships = () => {
                 />
               </div>
               <div>
-                <Label>Company</Label>
+                <Label>Company *</Label>
                 <Input
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="Company name"
+                />
+              </div>
+              <div>
+                <Label>Location *</Label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g., Mumbai, Delhi, Remote"
+                />
+              </div>
+              <div>
+                <Label>Mode *</Label>
+                <Select value={formData.mode} onValueChange={(value) => setFormData({ ...formData, mode: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select work mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="remote">Remote</SelectItem>
+                    <SelectItem value="onsite">On-site</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Duration</Label>
+                <Input
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  placeholder="e.g., 3 months, 6 months"
                 />
               </div>
               <div>
@@ -298,14 +386,69 @@ const AdminInternships = () => {
                   rows={4}
                 />
               </div>
+              
               <div>
-                <Label>Duration</Label>
-                <Input
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  placeholder="e.g., 3 months, 6 months"
-                />
+                <Label>Skills</Label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    placeholder="Add a skill"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                  />
+                  <Button type="button" onClick={addSkill}>Add</Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.skills.map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(index)}>
+                      {skill} ×
+                    </Badge>
+                  ))}
+                </div>
               </div>
+
+              <div>
+                <Label>Responsibilities</Label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={responsibilityInput}
+                    onChange={(e) => setResponsibilityInput(e.target.value)}
+                    placeholder="Add a responsibility"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addResponsibility())}
+                  />
+                  <Button type="button" onClick={addResponsibility}>Add</Button>
+                </div>
+                <div className="space-y-1">
+                  {formData.responsibilities.map((resp, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <span className="flex-1">{resp}</span>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeResponsibility(index)}>×</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Requirements</Label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={requirementInput}
+                    onChange={(e) => setRequirementInput(e.target.value)}
+                    placeholder="Add a requirement"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+                  />
+                  <Button type="button" onClick={addRequirement}>Add</Button>
+                </div>
+                <div className="space-y-1">
+                  {formData.requirements.map((req, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <span className="flex-1">{req}</span>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeRequirement(index)}>×</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <Button onClick={handleSubmit} className="w-full">
                 {editingInternship ? 'Update Internship' : 'Create Internship'}
               </Button>
@@ -324,6 +467,8 @@ const AdminInternships = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Mode</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -333,6 +478,10 @@ const AdminInternships = () => {
                 <TableRow key={internship.id}>
                   <TableCell className="font-medium">{internship.title}</TableCell>
                   <TableCell>{internship.company}</TableCell>
+                  <TableCell>{internship.location}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{internship.mode}</Badge>
+                  </TableCell>
                   <TableCell>{internship.duration || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -355,7 +504,6 @@ const AdminInternships = () => {
         </CardContent>
       </Card>
 
-      {/* Applicants Dialog */}
       <Dialog open={showApplicantsDialog} onOpenChange={setShowApplicantsDialog}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
