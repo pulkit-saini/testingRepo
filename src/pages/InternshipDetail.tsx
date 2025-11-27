@@ -456,7 +456,7 @@ export default function InternshipDetail() {
                 </SelectTrigger>
                 <SelectContent>
                   {internship.responsibilities && internship.responsibilities.map((task, index) => {
-                    const title = task.split(' - ')[0];
+                    const title = task.split(' <br> ')[0];
                     return (
                       <SelectItem key={index} value={title}>
                         {title}
