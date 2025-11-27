@@ -17,6 +17,7 @@ interface Internship {
   title: string;
   company: string;
   description: string | null;
+  jobDescription?: string | null;
   duration: string | null;
   location: string;
   mode: string;
@@ -55,6 +56,7 @@ const AdminInternships = () => {
   const [formData, setFormData] = useState({
     title: "",
     company: "",
+    jobDescription: "",
     description: "",
     duration: "",
     location: "",
@@ -239,6 +241,7 @@ const AdminInternships = () => {
     setFormData({
       title: "",
       company: "",
+      jobDescription: "",
       description: "",
       duration: "",
       location: "",
@@ -259,6 +262,7 @@ const AdminInternships = () => {
     setFormData({
       title: internship.title,
       company: internship.company,
+      jobDescription: internship.jobDescription,
       description: internship.description || "",
       duration: internship.duration || "",
       location: internship.location,
@@ -386,7 +390,15 @@ const AdminInternships = () => {
                   rows={4}
                 />
               </div>
-              
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={formData.jobDescription}
+                  onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
+                  placeholder="Internship Job Description"
+                  rows={4}
+                />
+              </div>
               <div>
                 <Label>Skills</Label>
                 <div className="flex gap-2 mb-2">

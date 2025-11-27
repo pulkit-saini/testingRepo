@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ interface Internship {
   title: string;
   company: string;
   duration: string;
+  jobDescription?: string;
   description: string;
   location: string;
   mode: string;
@@ -230,7 +231,13 @@ export default function InternshipDetail() {
               </Badge>
             </div>
 
-            <div className="flex justify-center pt-6">
+            <div className="flex gap-10 pt-6">
+              <a href={internship.jobDescription} target="_blank">
+              <Button size="lg" className="gap-2">
+                <Send className="h-5 w-5" />
+                Job Description
+              </Button>
+              </a>
               <Button size="lg" onClick={handleApplyClick} className="gap-2">
                 <Send className="h-5 w-5" />
                 I'm Interested - Apply Now
